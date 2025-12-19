@@ -102,6 +102,50 @@ const ADHD_TIPS = [
 
 // --- Components ---
 
+const MagnetButton = ({
+  children,
+  onClick,
+  className = "",
+  href,
+}: {
+  children: React.ReactNode;
+  onClick?: () => void;
+  className?: string;
+  href?: string;
+}) => {
+  const [position, setPosition] = useState({ x: 0, y: 0 });
+  const ref = useRef<HTMLDivElement>(null);
+
+  const handleMouse = (e: MouseEvent) => {
+    if (!ref.current) return;
+    const { clientX, clientY } = e;
+    const { left, top, width, height } = ref.current.getBoundingClientRect();
+    const x = clientX - (left + width / 2);
+    const y = clientY - (top + height / 2);
+
+    const pull = 0.4;
+    setPosition({ x: x * pull, y: y * pull });
+  };
+
+  const reset = () => setPosition({ x: 0, y: 0 });
+
+  const content = (
+    <motion.div
+      ref={ref}
+      onMouseMove={(e: any) => handleMouse(e)}
+      onMouseLeave={reset}
+      animate={{ x: position.x, y: position.y }}
+      transition={{ type: "spring", stiffness: 150, damping: 15, mass: 0.1 }}
+      onClick={onClick}
+      className={`cursor-pointer ${className}`}
+    >
+      {children}
+    </motion.div>
+  );
+
+  return href ? <a href={href}>{content}</a> : content;
+};
+
 const GlobalClickEffect = () => {
   const [clicks, setClicks] = useState<{ x: number; y: number; id: number }[]>([]);
 
@@ -146,28 +190,53 @@ const DistractionModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: () =>
     }
   }, [isOpen]);
 
-  if (!isOpen) return null;
-
   return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      className="fixed inset-0 z-[100] bg-black/95 backdrop-blur-md cursor-pointer flex items-center justify-center p-6"
-      onClick={onClose}
-    >
-      <motion.div
-        initial={{ scale: 0.9, y: 20 }}
-        animate={{ scale: 1, y: 0 }}
-        className="max-w-xl w-full text-center space-y-8"
-      >
-        <Brain size={48} className="mx-auto text-red-600 animate-pulse" />
-        <h2 className="text-3xl md:text-5xl font-bold text-white tracking-tight leading-tight">
-          "{tip}"
-        </h2>
-        <p className="text-gray-500 text-sm uppercase tracking-widest mt-12">Click anywhere to return to focus</p>
-      </motion.div>
-    </motion.div>
+    <AnimatePresence>
+      {isOpen && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 z-[100] bg-black/98 backdrop-blur-xl cursor-pointer flex items-center justify-center p-6"
+          onClick={onClose}
+        >
+          {/* Animated Noise Pattern */}
+          <div className="absolute inset-0 opacity-[0.03] pointer-events-none mix-blend-overlay bg-[url('https://grainy-gradients.vercel.app/noise.svg')]" />
+
+          <motion.div
+            initial={{ scale: 0.95, opacity: 0, y: 10 }}
+            animate={{ scale: 1, opacity: 1, y: 0 }}
+            exit={{ scale: 1.05, opacity: 0, y: -10 }}
+            transition={{ type: "spring", stiffness: 100, damping: 20 }}
+            className="max-w-2xl w-full text-center space-y-12 relative z-10"
+          >
+            <motion.div
+              animate={{
+                scale: [1, 1.1, 1],
+                rotate: [0, 5, -5, 0]
+              }}
+              transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+            >
+              <Brain size={64} className="mx-auto text-red-600/80 filter drop-shadow-[0_0_15px_rgba(220,38,38,0.3)]" />
+            </motion.div>
+
+            <h2 className="text-4xl md:text-6xl font-black text-white tracking-tighter leading-[1.1] font-sans italic">
+              "{tip}"
+            </h2>
+
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.5 }}
+              className="space-y-4"
+            >
+              <div className="w-12 h-px bg-red-600/50 mx-auto" />
+              <p className="text-zinc-500 text-[10px] uppercase tracking-[0.4em] font-bold">Tap to continue path of focus</p>
+            </motion.div>
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
   );
 };
 
@@ -183,26 +252,31 @@ const Navbar = ({ visible, onDistracted }: { visible: boolean; onDistracted: () 
           initial={{ y: -100, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           exit={{ y: -100, opacity: 0 }}
-          transition={{ duration: 0.5, ease: "easeInOut" }}
+          transition={{ duration: 0.6, ease: [0.23, 1, 0.32, 1] }}
           className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-6 md:px-12 py-8 pointer-events-none select-none"
         >
           <div className="pointer-events-auto">
-            <span className="text-xl font-bold tracking-tight text-white font-sans">MONK MODE</span>
+            <MagnetButton>
+              <span className="text-xl font-black tracking-tight text-white font-sans">MONK MODE</span>
+            </MagnetButton>
           </div>
 
-          <div className="pointer-events-auto flex items-center gap-12 text-sm font-medium tracking-widest lowercase mix-blend-difference">
-            <button
-              onClick={scrollToSanctuary}
-              className="text-gray-500 hover:text-red-500 transition-colors opacity-80 hover:opacity-100"
-            >
-              tired?
-            </button>
-            <button
-              onClick={onDistracted}
-              className="text-gray-500 hover:text-red-500 transition-colors opacity-80 hover:opacity-100"
-            >
-              distracted?
-            </button>
+          <div className="pointer-events-auto flex items-center gap-6 md:gap-12 text-[10px] md:text-sm font-bold tracking-[0.2em] uppercase mix-blend-difference">
+            <MagnetButton onClick={scrollToSanctuary}>
+              <button className="text-zinc-500 hover:text-white transition-colors">
+                tired?
+              </button>
+            </MagnetButton>
+            <MagnetButton onClick={onDistracted}>
+              <button className="text-zinc-500 hover:text-white transition-colors">
+                distracted?
+              </button>
+            </MagnetButton>
+            <MagnetButton href="/login">
+              <button className="px-6 py-2 border border-white/10 hover:border-red-600/50 hover:bg-white/5 transition-all duration-300">
+                LOGIN
+              </button>
+            </MagnetButton>
           </div>
         </motion.nav>
       )}
@@ -259,9 +333,15 @@ const Timer = ({ onToggleMode, isMonkMode }: { onToggleMode: (active: boolean) =
   return (
     <div className="relative z-10 flex flex-col items-center justify-center">
       <motion.div layout className="relative">
-        <span className={`block text-[20vw] md:text-[16rem] font-black tracking-tighter leading-none tabular-nums transition-colors duration-700 font-mono ${isActive ? 'text-white' : 'text-transparent bg-clip-text bg-gradient-to-b from-white to-gray-900/20'}`}>
+        <motion.span
+          animate={isActive ? {
+            textShadow: ["0 0 0px rgba(255,255,255,0)", "0 0 20px rgba(255,255,255,0.2)", "0 0 0px rgba(255,255,255,0)"]
+          } : {}}
+          transition={{ duration: 4, repeat: Infinity }}
+          className={`block text-[22vw] md:text-[18rem] font-black tracking-tighter leading-none tabular-nums transition-colors duration-700 font-mono ${isActive ? 'text-white' : 'text-transparent bg-clip-text bg-gradient-to-b from-white to-zinc-800'}`}
+        >
           {formatTime(timeLeft)}
-        </span>
+        </motion.span>
       </motion.div>
 
       {/* Timer Presets */}
@@ -269,16 +349,17 @@ const Timer = ({ onToggleMode, isMonkMode }: { onToggleMode: (active: boolean) =
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="flex gap-4 mb-12"
+          className="flex gap-3 mb-12"
         >
           {[15, 25, 45, 60].map((m) => (
-            <button
-              key={m}
-              onClick={() => setTime(m)}
-              className="px-4 py-2 rounded-full border border-white/10 hover:border-red-600/50 hover:bg-white/5 text-gray-500 hover:text-white text-xs font-mono transition-all"
-            >
-              {m}m
-            </button>
+            <MagnetButton key={m}>
+              <button
+                onClick={() => setTime(m)}
+                className="px-5 py-2 rounded-none border border-white/5 hover:border-white/20 hover:bg-white/5 text-zinc-500 hover:text-white text-[10px] font-bold tracking-widest transition-all"
+              >
+                {m}M
+              </button>
+            </MagnetButton>
           ))}
         </motion.div>
       )}
@@ -301,35 +382,46 @@ const Sanctuary = () => {
   useEffect(() => {
     const timer = setInterval(() => {
       setCurrentIndex((prev) => (prev + 1) % WISE_SOULS.length);
-    }, 6000);
+    }, 8000);
     return () => clearInterval(timer);
   }, []);
 
   return (
     <section id="sanctuary" className="relative w-full min-h-screen flex flex-col items-center justify-center bg-[#050505] border-t border-white/5 py-32 overflow-hidden">
+      {/* Background Atmosphere */}
+      <div className="absolute inset-0 z-0 opacity-20">
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[1000px] h-[1000px] bg-red-900/10 blur-[120px] rounded-full" />
+      </div>
+
       <div className="relative z-10 w-full max-w-7xl px-6 grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
         {/* Left: Text Content */}
-        <div className="space-y-12">
-          <div className="space-y-2">
-            <h4 className="text-red-900 text-[10px] font-bold tracking-[0.5em] uppercase font-sans">Wisdom Archive</h4>
+        <div className="space-y-16">
+          <div className="space-y-4">
+            <motion.div
+              initial={{ width: 0 }}
+              whileInView={{ width: "40px" }}
+              className="h-1 bg-red-600/50"
+            />
+            <h4 className="text-zinc-500 text-[10px] font-bold tracking-[0.6em] uppercase font-sans">Wisdom Archive</h4>
           </div>
 
-          <div className="h-[300px] relative">
+          <div className="h-[350px] relative flex flex-col justify-center">
             <AnimatePresence mode="wait">
               <motion.div
                 key={currentIndex}
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 1.05 }}
-                transition={{ duration: 0.8, ease: "easeInOut" }}
-                className="space-y-8"
+                initial={{ opacity: 0, x: -20, filter: "blur(10px)" }}
+                animate={{ opacity: 1, x: 0, filter: "blur(0px)" }}
+                exit={{ opacity: 0, x: 20, filter: "blur(10px)" }}
+                transition={{ duration: 0.8, ease: [0.23, 1, 0.32, 1] }}
+                className="space-y-10"
               >
-                <p className="text-3xl md:text-4xl text-gray-200 font-serif leading-tight">
-                  "{WISE_SOULS[currentIndex].quote}"
+                <Quote className="text-red-900/20" size={48} />
+                <p className="text-3xl md:text-5xl text-white font-serif leading-tight tracking-tight italic">
+                  {WISE_SOULS[currentIndex].quote}
                 </p>
-                <div className="space-y-1 border-l-2 border-red-900/30 pl-6">
-                  <h5 className="text-xl font-bold text-white uppercase tracking-widest font-sans">{WISE_SOULS[currentIndex].name}</h5>
-                  <p className="text-xs text-gray-600 font-bold uppercase tracking-widest">{WISE_SOULS[currentIndex].title}</p>
+                <div className="space-y-2 pl-6 border-l border-red-900/40">
+                  <h5 className="text-xl font-black text-white uppercase tracking-widest font-sans">{WISE_SOULS[currentIndex].name}</h5>
+                  <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-[0.3em]">{WISE_SOULS[currentIndex].title}</p>
                 </div>
               </motion.div>
             </AnimatePresence>
@@ -340,33 +432,37 @@ const Sanctuary = () => {
               key={currentIndex}
               initial={{ x: '-100%' }}
               animate={{ x: '100%' }}
-              transition={{ duration: 6, ease: "linear" }}
-              className="absolute inset-y-0 w-full bg-gradient-to-r from-transparent via-red-900 to-transparent opacity-50"
+              transition={{ duration: 8, ease: "linear" }}
+              className="absolute inset-y-0 w-full bg-gradient-to-r from-transparent via-red-600/30 to-transparent"
             />
           </div>
         </div>
 
         {/* Right: Portrait */}
-        <div className="relative aspect-[3/4] md:aspect-square w-full max-w-sm mx-auto lg:max-w-none mix-blend-lighten">
+        <div className="relative aspect-square w-full max-w-md mx-auto lg:max-w-none group">
           <AnimatePresence mode="wait">
             <motion.div
               key={currentIndex}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 0.6 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 1.5 }}
-              className="absolute inset-0 grayscale contrast-125"
+              initial={{ opacity: 0, scale: 1.1, rotate: 2 }}
+              animate={{ opacity: 1, scale: 1, rotate: 0 }}
+              exit={{ opacity: 0, scale: 0.9, rotate: -2 }}
+              transition={{ duration: 1.2, ease: [0.23, 1, 0.32, 1] }}
+              className="absolute inset-0 rounded-none overflow-hidden"
             >
-              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <div className="absolute inset-0 bg-red-900/10 mix-blend-color z-10" />
               <img
                 src={`https://image.pollinations.ai/prompt/${encodeURIComponent(WISE_SOULS[currentIndex].prompt)}?nologo=true`}
                 alt={WISE_SOULS[currentIndex].name}
-                className="w-full h-full object-cover"
+                className="w-full h-full object-cover grayscale transition-all duration-1000 group-hover:grayscale-0"
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-[#050505] via-transparent to-transparent" />
-              <div className="absolute inset-0 bg-gradient-to-r from-[#050505] via-transparent to-transparent" />
+              <div className="absolute inset-0 bg-gradient-to-t from-[#050505] via-transparent to-transparent z-20" />
+              <div className="absolute inset-0 bg-gradient-to-r from-[#050505] via-transparent to-transparent z-20" />
             </motion.div>
           </AnimatePresence>
+
+          {/* Framer Decorative Elements */}
+          <div className="absolute -top-4 -right-4 w-24 h-24 border-t border-r border-red-600/20" />
+          <div className="absolute -bottom-4 -left-4 w-24 h-24 border-b border-l border-red-600/20" />
         </div>
       </div>
     </section>
@@ -399,9 +495,14 @@ export default function Home() {
         {/* God's Currency Watermark */}
         {!monkMode && (
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full text-center pointer-events-none z-0 mix-blend-overlay">
-            <h1 className="text-[10vw] font-black uppercase text-white/5 leading-none tracking-tighter select-none blur-sm">
+            <motion.h1
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 2 }}
+              className="text-[12vw] font-black uppercase text-white/5 leading-none tracking-tighter select-none blur-sm"
+            >
               Focus is the<br />Currency of Gods
-            </h1>
+            </motion.h1>
           </div>
         )}
 
@@ -427,10 +528,27 @@ export default function Home() {
       >
         <Sanctuary />
 
-        <footer className="py-24 border-t border-white/5 bg-[#020202] text-center">
-          <h2 className="text-[6vw] font-black tracking-tighter text-white/5 select-none leading-none">
-            MONK MODE
-          </h2>
+        <footer className="py-32 border-t border-white/5 bg-[#020202] relative overflow-hidden">
+          <div className="absolute inset-0 opacity-10">
+            <div className="absolute top-0 left-1/4 w-px h-full bg-gradient-to-b from-red-600/50 to-transparent" />
+            <div className="absolute top-0 right-1/4 w-px h-full bg-gradient-to-b from-red-600/50 to-transparent" />
+          </div>
+
+          <div className="relative z-10 flex flex-col items-center gap-12">
+            <h2 className="text-[10vw] font-black tracking-tighter text-white/5 select-none leading-none">
+              MONK MODE
+            </h2>
+
+            <div className="flex gap-8 text-[10px] font-bold tracking-[0.3em] text-zinc-600 uppercase">
+              <span className="hover:text-zinc-400 cursor-pointer transition-colors">Privacy</span>
+              <span className="hover:text-zinc-400 cursor-pointer transition-colors">Terms</span>
+              <span className="hover:text-zinc-400 cursor-pointer transition-colors">Protocol</span>
+            </div>
+
+            <p className="text-zinc-800 text-[9px] tracking-[0.2em] uppercase font-bold">
+              © 2024 MONK MODE. BUIDL WITH FOCUS.
+            </p>
+          </div>
         </footer>
       </motion.div>
 
