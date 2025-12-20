@@ -1,26 +1,165 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --background: #0F172A;
+  --bg-secondary: #0F172A;
+  /* Base Dark Slate */
+  --bg-accent: #1E1B4B;
+  /* Indigo Blob */
+  --foreground: #F2F2F7;
+  --primary: #FF3B30;
 }
 
 body {
-  background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
+  background-color: var(--background);
+}
+
+/* Masterpiece Animated Mesh Gradient */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -2;
+  background-color: var(--background);
+  background-image:
+    radial-gradient(at 0% 0%, var(--bg-accent) 0, transparent 50%),
+    radial-gradient(at 50% 0%, var(--bg-secondary) 0, transparent 50%),
+    radial-gradient(at 100% 0%, var(--bg-accent) 0, transparent 50%),
+    radial-gradient(at 0% 50%, var(--bg-secondary) 0, transparent 50%),
+    radial-gradient(at 100% 50%, var(--bg-secondary) 0, transparent 50%),
+    radial-gradient(at 0% 100%, var(--bg-accent) 0, transparent 50%),
+    radial-gradient(at 50% 100%, var(--bg-secondary) 0, transparent 50%),
+    radial-gradient(at 100% 100%, var(--bg-accent) 0, transparent 50%);
+  background-size: 200% 200%;
+  animation: mesh-breathe 40s ease-in-out infinite alternate;
+  pointer-events: none;
+}
+
+/* Vignette & Noise Vault Overlays */
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background:
+    radial-gradient(circle at center, transparent 0%, rgba(15, 23, 42, 0.4) 60%, rgba(15, 23, 42, 0.9) 100%),
+    url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+  opacity: 0.05;
+  pointer-events: none;
+}
+
+@keyframes mesh-breathe {
+  0% {
+    background-position: 0% 0%;
+    scale: 1;
+    opacity: 0.7;
+  }
+
+  50% {
+    background-position: 100% 100%;
+    scale: 1.05;
+    opacity: 1;
+  }
+
+  100% {
+    background-position: 0% 0%;
+    scale: 1;
+    opacity: 0.7;
+  }
+}
+
+/* Floating Animation for Cards */
+@keyframes card-float {
+  0% {
+    transform: translateY(0px);
+  }
+
+  50% {
+    transform: translateY(-10px);
+  }
+
+  100% {
+    transform: translateY(0px);
+  }
+}
+
+.float-card {
+  animation: card-float 6s ease-in-out infinite;
+}
+
+/* Fluid Reveal Animation */
+@keyframes fluid-reveal {
+  from {
+    opacity: 0;
+    transform: translateY(20px) scale(0.98);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.reveal {
+  animation: fluid-reveal 1.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Ghost Button with Focus Energy Glow */
+.ghost-button {
+  @apply relative px-5 py-2 rounded-full border border-white/10 text-white/50 text-[9px] tracking-[0.2em] font-bold transition-all duration-500 overflow-hidden uppercase;
+}
+
+.ghost-button:hover {
+  @apply border-white/30 text-white;
+  box-shadow: 0 0 20px rgba(255, 255, 255, 0.08);
+}
+
+.ghost-button::before {
+  content: '';
+  @apply absolute inset-0 bg-white/5 opacity-0 transition-opacity duration-500;
+}
+
+.ghost-button:hover::before {
+  @apply opacity-100;
+}
+
+/* Masterpiece Glassmorphism */
+.glass {
+  background: rgba(15, 23, 42, 0.4);
+  backdrop-filter: blur(40px) saturate(180%);
+  -webkit-backdrop-filter: blur(40px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+/* Custom minimal scrollbar */
+::-webkit-scrollbar {
+  width: 2px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--background);
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 20px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 59, 48, 0.3);
+}
+
+.perspective-1000 {
+  perspective: 1000px;
+}
+
+html {
+  scroll-behavior: smooth;
 }
